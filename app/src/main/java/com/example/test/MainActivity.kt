@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.Image
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
@@ -15,7 +16,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.example.test.databinding.ActivityMainBinding
 import com.example.test.ml.Mobilenetv2Haricot
@@ -121,8 +124,26 @@ class MainActivity : AppCompatActivity() {
                 requestPermission.launch(android.Manifest.permission.CAMERA)
             }
         }
+
+        /*on cree un photo picker qui va nous permettre de choisir une image
+        et d'utiliser son uri dans un callback*/
+        val photoPicker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()){ uri ->
+
+            if(uri != null){
+                Log.d("PhotoPicker", "Une jolie photo")
+                val bitmap = BitmapFactory.decodeStream(contentResolver.openInputStream(uri))
+                imageView.setImageBitmap(bitmap)
+                outputGenerator(bitmap)
+            }else{
+                Log.d("PhotoPicker", "L'utilisateur n'a rien choisi")
+            }
+        }
+
         buttonLoad.setOnClickListener{
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+            //on lance le PhotoPicker
+            photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+
+            /*if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)
                 == PackageManager.PERMISSION_GRANTED){
                 val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                 intent.type = "image/*"
@@ -131,8 +152,10 @@ class MainActivity : AppCompatActivity() {
                 intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 onresult.launch(intent)
             } else {
-                requestPermission.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
-            }
+                requestPermission.launch(android.Manifest.permission.READ_MEDIA_IMAGES);
+            }*/*/
+
+
         }
 
         Log.i("TAG", "onCreate end")
